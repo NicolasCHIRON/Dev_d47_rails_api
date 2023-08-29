@@ -4,35 +4,34 @@ class ArticlesController < ApplicationController
 
   # GET /articles
   def index
-    @articles = Article.all
+    if current_user
+      @articles = Article.all.where(private: false).or(current_user.articles.where(private: true))
+    else
+      @articles = Article.all.where(private: false)
+    end
 
     render json: @articles
   end
 
   # GET /articles/1
   def show
-    render json: @article
+    render json: @article, include: :comments
   end
 
   # POST /articles
   def create
-    @article = Article.new(article_params) 
-      
-    if article_params[:user_id] == current_user.id
-      if @article.save
-        render json: @article, status: :created, location: @article
-      else
-        render json: @article.errors, status: :unprocessable_entity
-      end
+    @article = Article.new(title: article_params[:title], content: article_params[:content], user_id: current_user.id, private: article_params[:private]) 
+    if @article.save
+      render json: @article, status: :created, location: @article
     else
-      render json: { error: "L'article doit-être attribué à la personne connectée." }
+      render json: @article.errors, status: :unprocessable_entity
     end
   end
 
   # PATCH/PUT /articles/1
   def update
     if @article.user.id == current_user.id
-      if @article.update(title: article_params[:title], content: article_params[:content], user_id: @article.user.id)
+      if @article.update(title: article_params[:title], content: article_params[:content], user_id: @article.user.id, private: article_params[:private])
         render json: @article
       else
         render json: @article.errors, status: :unprocessable_entity
@@ -59,6 +58,6 @@ class ArticlesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def article_params
-      params.require(:article).permit(:title, :content, :user_id)
+      params.require(:article).permit(:title, :content, :private)
     end
 end
