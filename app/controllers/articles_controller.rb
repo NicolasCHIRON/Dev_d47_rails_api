@@ -1,6 +1,6 @@
 class ArticlesController < ApplicationController
   before_action :set_article, only: %i[ show update destroy ]
-  before_action :authenticate_user!, only: %i[ create update]
+  before_action :authenticate_user!, only: %i[ create update destroy]
 
   # GET /articles
   def index
@@ -25,7 +25,7 @@ class ArticlesController < ApplicationController
         render json: @article.errors, status: :unprocessable_entity
       end
     else
-      render json: @article.errors, status: :unprocessable_entity
+      render json: { error: "L'article doit-être attribué à la personne connectée." }
     end
   end
 
@@ -38,7 +38,7 @@ class ArticlesController < ApplicationController
         render json: @article.errors, status: :unprocessable_entity
       end
     else
-      render json: @article.errors, status: :unprocessable_entity
+      render json: { error: "Vous ne pouvez pas mettre à jour cet article." }
     end
   end
 
@@ -47,7 +47,7 @@ class ArticlesController < ApplicationController
     if @article.user.id == current_user.id
       @article.destroy
     else
-      render json: @article.errors, status: :unprocessable_entity
+      render json: { error: "Vous ne pouvez pas supprimer cet article." }
     end
   end
 
